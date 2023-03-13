@@ -1,4 +1,5 @@
 ﻿using HiepHuynh_2011061513.Models;
+using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ namespace HiepHuynh_2011061513.Controllers
         {
             _dbContext = new ApplicationDbContext();
         }
+        
         public ActionResult Create()
         {
             var viewModel = new CourseViewModel
@@ -22,6 +24,27 @@ namespace HiepHuynh_2011061513.Controllers
                 Categories = _dbContext.Categories.ToList()
             };
             return View(viewModel);
+        }
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Create(CourseViewModel viewModel)
+        {
+            if(!ModelState.IsValid)
+            {
+                viewModel.Categories = _dbContext.Categories.ToList();
+                return View("Create", viewModel);
+            }
+            var course = new Course
+            {
+                LectureId = User.Identity.GetUserId(),
+                Datetime = viewModel.GetDateTime(),
+                CategoryId =viewModel.Category,
+                Place = viewModel.Place
+            };
+            _dbContext.Courses.Add(course);
+            _dbContext.SaveChanges();
+            return RedirectToAction("Index", "Home");
         }
     }
 }
